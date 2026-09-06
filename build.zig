@@ -3,7 +3,7 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    const mod = b.addModule("fasta_parser", .{
+    const mod = b.addModule("alphabet", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
     });
@@ -36,7 +36,7 @@ fn addExamples(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.bu
                 .target = target,
                 .optimize = optimize,
                 .imports = &.{
-                    .{ .name = "fasta_parser", .module = root },
+                    .{ .name = "alphabet", .module = root },
                 },
             }),
         });

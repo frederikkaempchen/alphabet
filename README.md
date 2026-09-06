@@ -1,4 +1,4 @@
-# language
+# alphabet
 a neat way to create a minimal symbol enum (an alphabet) from a string (the symbols of the alphabet)
 
 ```zig
