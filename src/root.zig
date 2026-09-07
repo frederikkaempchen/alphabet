@@ -69,7 +69,7 @@ pub fn Alphabet(comptime symbols: []const u8) type {
             return error.InvalidCharacter;
         }
 
-        /// returns a new alphabet, with the passed character as addidtional symbol added as 'last' field in the enum
+        /// returns a new alphabet, with the passed symbols appended to this alphabets symbols: `Alphabet(symbols ++ new_symbols)`
         /// conversion between this alphabet and the returned alphabet is possible for all shared symbols
         pub fn extendWith(comptime new_symbols: []const u8) type {
             for (new_symbols, 0..) |new_symbol, i| {
