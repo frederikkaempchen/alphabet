@@ -63,10 +63,16 @@ pub fn Alphabet(comptime symbols: []const u8) type {
         }
 
         pub fn fromChar(char: u8) error{InvalidCharacter}!Symbol {
-            inline for (symbols, 0..) |elem, i| {
-                if (char == elem) return @enumFromInt(i);
-            }
-            return error.InvalidCharacter;
+            const table: [256]?Symbol = comptime blk: {
+                var result: [256]?Symbol = .{null} ** 256;
+                for (symbols, 0..) |s, i| {
+                    result[s] = @enumFromInt(i);
+                }
+
+                break :blk result;
+            };
+
+            if (table[char]) |sym| return sym else return error.InvalidCharacter;
         }
 
         /// returns a new alphabet, with the passed symbols appended to this alphabets symbols: `Alphabet(symbols ++ new_symbols)`
