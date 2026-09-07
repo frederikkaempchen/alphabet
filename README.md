@@ -9,6 +9,8 @@ pub fn Alphabet(comptime symbols: []const u8) type {
     pub fn fromChar(char: u8) Symbol {...};
 
     pub fn toChar(symbol: Symbol) u8 {...};
+
+    pub fn extendWith(comptime new_symbols: []const u8) type {...};
   }
 }
 ```
@@ -35,7 +37,7 @@ pub const Symbol = enum(u3) { // the integer type is the minimal size integer ty
 
 this leads to some nice conversion tricks continuing the usecase example - might be useful for some:
 ```zig
-pub const NucleotideAlignment = Alphabet("ACTG-");
+pub const NucleotideAlignment = Nucleaotide.extendWith(&.{'-'});
 
 const AAlign: NucleotideAligment.Symbol = @enumFromInt(@intFromEnum(A));
   

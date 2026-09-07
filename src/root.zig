@@ -1,30 +1,38 @@
 const std = @import("std");
+const testing = std.testing;
 const Type = std.builtin.Type;
 const Enum = Type.Enum;
 const EnumField = Type.EnumField;
 const Allocator = std.mem.Allocator;
 
+/// checks that ther is at least one symbol and that all symbols are unique
 fn validateAlphabet(comptime symbols: []const u8) void {
     const size = symbols.len;
     if (size == 0) @compileError("alphabet cannot be empty");
 
     for (symbols, 0..) |c, i| {
         for (symbols[i + 1 ..], i + 1..) |d, j| {
-            if (c == d)
+            if (c == d) {
+                const markers: [j + 1]u8 = .{' '} ** i ++ .{'^'} ++ .{' '} ** (j - i - 1) ++ .{'^'};
                 @compileError(std.fmt.comptimePrint(
-                    "Duplicate character at indices {} and {}.",
-                    .{ i, j },
-                ));
+                    \\Duplicate character at indices {} and {}.
+                    \\symbols: {s}
+                    \\         {s}
+                , .{ i, j, symbols, markers }));
+            }
         }
     }
 }
 
+/// creates a minimal sized enum(u<minimal size>) with the symbols as field names
+/// each symbol is assigned its index in the symbols slice as value
 pub fn Alphabet(comptime symbols: []const u8) type {
     validateAlphabet(symbols);
 
     const size = symbols.len;
 
-    const TagInt = @Int(.unsigned, std.math.log2_int_ceil(usize, size)); // size <= 2^tag_type.bits
+    const tag_int_bits = @max(1, std.math.log2_int_ceil(usize, size)); // 1 <= size <= 2^tag_type.bits
+    const TagInt = @Int(.unsigned, tag_int_bits);
 
     const field_names: [size][]const u8 = blk: {
         var res: [size][]const u8 = undefined;
@@ -42,9 +50,10 @@ pub fn Alphabet(comptime symbols: []const u8) type {
         break :blk res;
     };
 
-    // - fromChar, intoChar - both based on a table lookup and symbols
-
     return struct {
+        /// enum of the alphabets symbols
+        /// fields: name = symbols[i] , value = i
+        /// tag int is u<minimal size>
         pub const Symbol: type = @Enum(TagInt, .exhaustive, &field_names, &field_values);
 
         const Self = @This();
@@ -59,5 +68,33 @@ pub fn Alphabet(comptime symbols: []const u8) type {
             }
             return error.InvalidCharacter;
         }
+
+        /// returns a new alphabet, with the passed character as addidtional symbol added as 'last' field in the enum
+        /// conversion between this alphabet and the returned alphabet is possible for all shared symbols
+        pub fn extendWith(comptime new_symbols: []const u8) type {
+            for (new_symbols, 0..) |new_symbol, i| {
+                for (symbols, 0..) |symbol, j| {
+                    if (new_symbol == symbol) {
+                        const i_marker: [i + 1]u8 = .{' '} ** i ++ .{'^'};
+                        const j_marker: [j + 1]u8 = .{' '} ** j ++ .{'^'};
+
+                        @compileError(std.fmt.comptimePrint(
+                            \\The symbol {c} at index {} of the new_symbols already exists in Alphabet symbols at index {}.
+                            \\Alphabet symbols: {s}
+                            \\                  {s}
+                            \\new_symbols:      {s}
+                            \\                  {s}
+                        , .{ new_symbol, j, i, symbols, j_marker, new_symbols, i_marker }));
+                    }
+                }
+            }
+            return Alphabet(symbols ++ new_symbols);
+        }
     };
+}
+
+test "extend with a many symbols" {
+    const Base = Alphabet("ACTGN");
+    const AlignmentBase = Base.extendWith("BLzuipqwert");
+    try testing.expectEqual(@intFromEnum(try AlignmentBase.fromChar('A')), @intFromEnum(try Base.fromChar('A')));
 }
