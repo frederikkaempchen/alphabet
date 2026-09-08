@@ -11,6 +11,8 @@ pub fn Alphabet(comptime symbols: []const u8) type {
     pub fn toChar(symbol: Symbol) u8 {...};
 
     pub fn extendWith(comptime new_symbols: []const u8) type {...};
+
+    pub fn intFromSlice(comptime len: usize, slice: *[len]Symbol) @Int(.unsigned, tag_int_bits * size) {...};
   }
 }
 ```

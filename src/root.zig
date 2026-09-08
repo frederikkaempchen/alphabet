@@ -96,6 +96,20 @@ pub fn Alphabet(comptime symbols: []const u8) type {
             }
             return Alphabet(symbols ++ new_symbols);
         }
+
+        /// returns uint<tag int bits of Symbol enum * len>
+        pub fn PackedInt(comptime len: usize) type {
+            return @Int(.unsigned, tag_int_bits * len);
+        }
+
+        /// returns the smallest single integer representation of a slice of symbols
+        pub inline fn pack(comptime len: usize, slice: *const [len]Symbol) PackedInt(len) {
+            var x: PackedInt(len) = @intFromEnum(slice[0]);
+            inline for (slice[1..]) |elem| {
+                x = (x << tag_int_bits) | @intFromEnum(elem);
+            }
+            return x;
+        }
     };
 }
 
@@ -103,4 +117,11 @@ test "extend with a many symbols" {
     const Base = Alphabet("ACTGN");
     const AlignmentBase = Base.extendWith("BLzuipqwert");
     try testing.expectEqual(@intFromEnum(try AlignmentBase.fromChar('A')), @intFromEnum(try Base.fromChar('A')));
+}
+
+test "int from slice" {
+    const Base = Alphabet("ACTGN"); // 3 bits
+    const word: [5]Base.Symbol = .{ .A, .C, .T, .G, .N }; // 5*3 = 15
+    const w_int = Base.intFromSlice(5, &word);
+    try testing.expectEqual(@TypeOf(w_int), @Int(.unsigned, 15));
 }
