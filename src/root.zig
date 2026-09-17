@@ -103,7 +103,9 @@ pub fn Alphabet(comptime symbols: []const u8) type {
         }
 
         /// returns the smallest single integer representation of a slice of symbols
-        pub inline fn pack(comptime len: usize, slice: *const [len]Symbol) PackedInt(len) {
+        /// asserts slice.len = len
+        pub inline fn pack(comptime len: usize, slice: []Symbol) PackedInt(len) {
+            std.debug.assert(slice.len == len);
             var x: PackedInt(len) = @intFromEnum(slice[0]);
             inline for (slice[1..]) |elem| {
                 x = (x << tag_int_bits) | @intFromEnum(elem);
