@@ -104,10 +104,10 @@ pub fn Alphabet(comptime symbols: []const u8) type {
 
         /// returns the smallest single integer representation of a slice of symbols
         /// asserts slice.len = len
-        pub inline fn pack(comptime len: usize, slice: []Symbol) PackedInt(len) {
+        pub inline fn pack(comptime len: usize, slice: []const Symbol) PackedInt(len) {
             std.debug.assert(slice.len == len);
             var x: PackedInt(len) = @intFromEnum(slice[0]);
-            inline for (slice[1..]) |elem| {
+            inline for (slice[1..len]) |elem| {
                 x = (x << tag_int_bits) | @intFromEnum(elem);
             }
             return x;
@@ -124,6 +124,6 @@ test "extend with a many symbols" {
 test "int from slice" {
     const Base = Alphabet("ACTGN"); // 3 bits
     const word: [5]Base.Symbol = .{ .A, .C, .T, .G, .N }; // 5*3 = 15
-    const w_int = Base.intFromSlice(5, &word);
+    const w_int = Base.pack(5, word[0..]);
     try testing.expectEqual(@TypeOf(w_int), @Int(.unsigned, 15));
 }
